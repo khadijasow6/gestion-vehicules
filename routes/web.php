@@ -21,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 Route::middleware(['auth'])->group(function () {
-    Route::get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+    Route::resource('vehicles', VehicleController::class);
 });
+
 require __DIR__.'/auth.php';
