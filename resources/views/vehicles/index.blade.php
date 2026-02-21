@@ -6,25 +6,25 @@
 
 @section('content')
 
+    {{-- Message succès --}}
+    @if(session('success'))
+        <div style="background:rgba(16,185,129,.15); border:1px solid rgba(16,185,129,.35); color:#bbf7d0; padding:14px; border-radius:14px; margin-bottom:18px;">
+            <i class="fas fa-check-circle"></i> {{ session('success') }}
+        </div>
+    @endif
+
     {{-- Barre d'actions --}}
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
 
-        {{-- Filtres --}}
+        {{-- Filtre statut --}}
         <form method="GET" action="{{ route('vehicles.index') }}"
               style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
             <select name="statut" onchange="this.form.submit()"
                     style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:0.75rem 1rem;color:var(--text-primary);font-family:'Outfit',sans-serif;">
                 <option value="">Tous les statuts</option>
-                <option value="disponible"  {{ request('statut') == 'disponible'  ? 'selected' : '' }}>Disponible</option>
-                <option value="loue"        {{ request('statut') == 'loue'        ? 'selected' : '' }}>En Location</option>
-                <option value="maintenance" {{ request('statut') == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-            </select>
-            <select name="type" onchange="this.form.submit()"
-                    style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:0.75rem 1rem;color:var(--text-primary);font-family:'Outfit',sans-serif;">
-                <option value="">Tous les types</option>
-                @foreach(['Berline','SUV','Citadine','Compacte','Break','Minibus','Pick-up'] as $t)
-                    <option value="{{ $t }}" {{ request('type') == $t ? 'selected' : '' }}>{{ $t }}</option>
-                @endforeach
+                <option value="disponible" {{ request('statut') == 'disponible' ? 'selected' : '' }}>Disponible</option>
+                <option value="en_service" {{ request('statut') == 'en_service' ? 'selected' : '' }}>En service</option>
+                <option value="en_panne" {{ request('statut') == 'en_panne' ? 'selected' : '' }}>En panne</option>
             </select>
         </form>
 
@@ -48,75 +48,79 @@
         <table>
             <thead>
                 <tr>
-                    <th>Véhicule</th>
-                    <th>Type</th>
-                    <th>Année</th>
-                    <th>Carburant</th>
+                    <th>Immatriculation</th>
+                    <th>Marque</th>
+                    <th>Modèle</th>
                     <th>Kilométrage</th>
-                    <th>Prix/Jour</th>
                     <th>Statut</th>
                     <th>Actions</th>
                 </tr>
             </thead>
+
             <tbody>
                 @forelse($vehicles as $vehicle)
-                <tr>
-                    <td>
-                        <div class="vehicle-info">
-                            <div class="vehicle-icon">
-                                @if($vehicle->photo)
-                                    <img src="{{ asset('storage/'.$vehicle->photo) }}"
-                                         style="width:100%;height:100%;object-fit:cover;border-radius:12px;" alt="">
-                                @else
-                                    <i class="fas fa-car"></i>
-                                @endif
-                            </div>
-                            <div class="vehicle-details">
-                                <h4>{{ $vehicle->marque }} {{ $vehicle->modele }}</h4>
-                                <p>{{ $vehicle->immatriculation }}</p>
-                            </div>
-                        </div>
-                    </td>
-                    <td>{{ $vehicle->type }}</td>
-                    <td>{{ $vehicle->annee }}</td>
-                    <td>{{ ucfirst($vehicle->carburant) }}</td>
-                    <td>{{ number_format($vehicle->kilometrage, 0, ',', ' ') }} km</td>
-                    <td style="font-weight:600;color:var(--accent-primary);">
-                        {{ number_format($vehicle->prix_location_jour, 0, ',', ' ') }} FCFA
-                    </td>
-                    <td>
-                        <span class="badge {{ $vehicle->statut }}">
-                            {{ $vehicle->statut == 'disponible' ? 'Disponible' : ($vehicle->statut == 'loue' ? 'En Location' : 'Maintenance') }}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="actions">
-                            <a href="{{ route('vehicles.show', $vehicle->id) }}"
-                               class="btn-action view" title="Voir">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ route('vehicles.edit', $vehicle->id) }}"
-                               class="btn-action edit" title="Modifier">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button onclick="confirmDelete({{ $vehicle->id }}, '{{ $vehicle->marque }} {{ $vehicle->modele }}')"
+                    @php
+                        // On réutilise les classes de badge du template
+                        $badgeClass = match($vehicle->statut) {
+                            'disponible' => 'disponible',
+                            'en_service' => 'loue',        // couleur orange
+                            'en_panne'   => 'maintenance', // couleur rouge
+                            default      => 'disponible',
+                        };
+
+                        $badgeLabel = match($vehicle->statut) {
+                            'disponible' => 'Disponible',
+                            'en_service' => 'En service',
+                            'en_panne'   => 'En panne',
+                            default      => $vehicle->statut,
+                        };
+                    @endphp
+
+                    <tr>
+                        <td style="font-family:'JetBrains Mono', monospace;">
+                            {{ $vehicle->immatriculation }}
+                        </td>
+
+                        <td>{{ $vehicle->marque }}</td>
+                        <td>{{ $vehicle->modele }}</td>
+
+                        <td>{{ number_format($vehicle->km_actuel, 0, ',', ' ') }} km</td>
+
+                        <td>
+                            <span class="badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
+                        </td>
+
+                        <td>
+                            <div class="actions">
+                                <a href="{{ route('vehicles.show', $vehicle) }}"
+                                   class="btn-action view" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+
+                                <a href="{{ route('vehicles.edit', $vehicle) }}"
+                                   class="btn-action edit" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                <button type="button"
+                                    onclick="confirmDelete({{ $vehicle->id }}, '{{ $vehicle->immatriculation }}')"
                                     class="btn-action delete" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 @empty
-                <tr>
-                    <td colspan="8" style="text-align:center;padding:3rem;color:var(--text-secondary);">
-                        <i class="fas fa-car" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.3;"></i>
-                        Aucun véhicule trouvé
-                        <br>
-                        <a href="{{ route('vehicles.create') }}" class="btn-primary" style="margin-top:1rem;display:inline-flex;">
-                            <i class="fas fa-plus"></i> Ajouter le premier véhicule
-                        </a>
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="6" style="text-align:center;padding:3rem;color:var(--text-secondary);">
+                            <i class="fas fa-car" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.3;"></i>
+                            Aucun véhicule trouvé
+                            <br>
+                            <a href="{{ route('vehicles.create') }}" class="btn-primary" style="margin-top:1rem;display:inline-flex;">
+                                <i class="fas fa-plus"></i> Ajouter le premier véhicule
+                            </a>
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
@@ -136,12 +140,13 @@
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
             <h3>Confirmer la suppression</h3>
-            <p>Êtes-vous sûr de vouloir supprimer <strong id="vehicleNom"></strong> ?<br>
+            <p>Êtes-vous sûr de vouloir supprimer le véhicule <strong id="vehicleNom"></strong> ?<br>
                Cette action est <strong>irréversible</strong>.</p>
             <div class="modal-actions">
-                <button onclick="closeModal()" class="btn-secondary">
+                <button type="button" onclick="closeModal()" class="btn-secondary">
                     <i class="fas fa-times"></i> Annuler
                 </button>
+
                 <form id="deleteForm" method="POST" style="margin:0;">
                     @csrf
                     @method('DELETE')
@@ -167,8 +172,11 @@
         document.getElementById('deleteModal').classList.remove('show');
     }
 
-    document.getElementById('deleteModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    }
 </script>
 @endsection

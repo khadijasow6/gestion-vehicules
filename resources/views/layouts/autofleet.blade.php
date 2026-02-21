@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>@yield('title', 'Dashboard - Gestion de Véhicules')</title>
+    <title>@yield('title', 'AutoFleet')</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
@@ -62,7 +61,6 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
-            transition: transform 0.3s ease;
         }
 
         .sidebar-header {
@@ -102,7 +100,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             color: var(--text-secondary);
-            font-weight: 500;
+            font-weight: 600;
             text-decoration: none;
         }
 
@@ -120,7 +118,7 @@
 
         .nav-item i { font-size: 1.125rem; width: 24px; }
 
-        /* Main Content */
+        /* Main */
         .main-content {
             margin-left: 280px;
             flex: 1;
@@ -138,11 +136,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
         .header-left h1 {
             font-size: 2rem;
-            font-weight: 700;
+            font-weight: 800;
             margin-bottom: 0.5rem;
             background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
             -webkit-background-clip: text;
@@ -152,7 +152,7 @@
 
         .header-left p { color: var(--text-secondary); font-size: 0.95rem; }
 
-        .header-right { display: flex; align-items: center; gap: 1rem; }
+        .header-right { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 
         .user-profile {
             display: flex;
@@ -172,7 +172,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
+            font-weight: 800;
             font-size: 1.125rem;
         }
 
@@ -183,18 +183,18 @@
             padding: 0.65rem 1rem;
             border-radius: 12px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 800;
             font-family: 'Outfit', sans-serif;
             transition: transform 0.2s ease;
         }
         .btn-logout:hover { transform: translateY(-1px); }
 
-        /* Table / Cards helpers from template */
+        /* ====== TABLE / BUTTONS / BADGES (IMPORTANT) ====== */
         .table-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 20px;
-            padding: 1.75rem;
+            padding: 1.5rem;
             overflow-x: auto;
         }
 
@@ -202,62 +202,95 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
         }
 
         .table-title {
-            font-size: 1.25rem;
-            font-weight: 700;
+            font-size: 1.2rem;
+            font-weight: 800;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: .7rem;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             color: white;
             border: none;
-            padding: 0.75rem 1.5rem;
+            padding: .75rem 1.1rem;
             border-radius: 12px;
-            font-weight: 600;
+            font-weight: 800;
             cursor: pointer;
-            transition: all 0.3s ease;
             font-family: 'Outfit', sans-serif;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: .5rem;
+            transition: transform .2s ease;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.3);
+        .btn-primary:hover { transform: translateY(-1px); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px;
         }
 
-        table { width: 100%; border-collapse: collapse; }
         thead { border-bottom: 1px solid var(--border-color); }
+
         th {
             text-align: left;
             padding: 1rem;
             color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 0.875rem;
+            font-weight: 700;
+            font-size: .85rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: .5px;
         }
-        td { padding: 1.25rem 1rem; border-bottom: 1px solid var(--border-color); }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
         tr:hover { background: rgba(0, 212, 255, 0.05); }
 
         .badge {
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            font-weight: 600;
+            padding: .45rem .9rem;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 700;
             display: inline-block;
         }
-        .badge.disponible { background: rgba(16, 185, 129, 0.15); color: var(--accent-success); }
-        .badge.loue { background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); }
-        .badge.maintenance { background: rgba(239, 68, 68, 0.15); color: var(--accent-danger); }
+
+        .badge.disponible { background: rgba(16,185,129,0.15); color: var(--accent-success); }
+        .badge.en_service { background: rgba(0,212,255,0.15); color: var(--accent-primary); }
+        .badge.en_panne { background: rgba(239,68,68,0.15); color: var(--accent-danger); }
+
+        .actions { display: flex; gap: .5rem; align-items: center; }
+
+        .btn-action {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: transform .15s ease;
+        }
+
+        .btn-action:hover { transform: scale(1.06); }
+
+        .btn-action.view { color: var(--accent-primary); }
+        .btn-action.edit { color: var(--accent-success); }
+        .btn-action.delete { color: var(--accent-danger); }
 
         /* Responsive */
         @media (max-width: 1024px) {
@@ -269,6 +302,7 @@
 
 <body>
 <div class="dashboard-container">
+
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -290,11 +324,26 @@
                 <i class="fas fa-car"></i>
                 <span>Véhicules</span>
             </a>
+
+            <a href="{{ route('reservations.index') }}"
+               class="nav-item {{ request()->routeIs('reservations.*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Réservations</span>
+            </a>
+
+            @if(auth()->user()?->role === 'admin')
+                <a href="{{ route('clients.index') }}"
+                   class="nav-item {{ request()->routeIs('clients.*') ? 'active' : '' }}">
+                    <i class="fas fa-users"></i>
+                    <span>Clients</span>
+                </a>
+            @endif
         </nav>
     </aside>
 
     <!-- Main Content -->
     <main class="main-content">
+
         <!-- Header -->
         <header class="header">
             <div class="header-left">
@@ -306,15 +355,22 @@
                 @php
                     $name = auth()->user()->name ?? 'Utilisateur';
                     $email = auth()->user()->email ?? '';
-                    $initials = collect(explode(' ', trim($name)))->filter()->map(fn($w) => strtoupper(substr($w,0,1)))->take(2)->join('');
+                    $initials = collect(explode(' ', trim($name)))
+                        ->filter()
+                        ->map(fn($w) => strtoupper(substr($w,0,1)))
+                        ->take(2)
+                        ->join('');
                     if ($initials === '') { $initials = 'U'; }
+                    $role = auth()->user()->role ?? 'client';
                 @endphp
 
                 <div class="user-profile">
                     <div class="user-avatar">{{ $initials }}</div>
                     <div>
-                        <div style="font-weight: 600;">{{ $name }}</div>
-                        <div style="font-size: 0.875rem; color: var(--text-secondary);">{{ $email }}</div>
+                        <div style="font-weight: 800;">{{ $name }}</div>
+                        <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                            {{ $email }} — {{ strtoupper($role) }}
+                        </div>
                     </div>
                 </div>
 
